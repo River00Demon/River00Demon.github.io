@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>HTML5 code Reader</title>
+</head>
+<style type="text/css">
+ html, body { height: 100%; width: 100%; text-align:center; }
+</style>
+<script src="js/jquery.min.js"></script>
+<script src="js/adapter.js"></script>
+<script type="text/javascript" src="jsqrcode/grid.js"></script>
+<script type="text/javascript" src="jsqrcode/version.js"></script>
+<script type="text/javascript" src="jsqrcode/detector.js"></script>
+<script type="text/javascript" src="jsqrcode/formatinf.js"></script>
+<script type="text/javascript" src="jsqrcode/errorlevel.js"></script>
+<script type="text/javascript" src="jsqrcode/bitmat.js"></script>
+<script type="text/javascript" src="jsqrcode/datablock.js"></script>
+<script type="text/javascript" src="jsqrcode/bmparser.js"></script>
+<script type="text/javascript" src="jsqrcode/datamask.js"></script>
+<script type="text/javascript" src="jsqrcode/rsdecoder.js"></script>
+<script type="text/javascript" src="jsqrcode/gf256poly.js"></script>
+<script type="text/javascript" src="jsqrcode/gf256.js"></script>
+<script type="text/javascript" src="jsqrcode/decoder.js"></script>
+<script type="text/javascript" src="jsqrcode/qrcode.js"></script>
+<script type="text/javascript" src="jsqrcode/findpat.js"></script>
+<script type="text/javascript" src="jsqrcode/alignpat.js"></script>
+<script type="text/javascript" src="jsqrcode/databr.js"></script>
+<script>
+var canvas=null,context=null,video=null,front = false;
+$(function(){
+  try{
+    canvas = document.getElementById("canvas");
+    context = canvas.getContext("2d");
+    video = document.getElementById("video");
+    document.getElementById('flip-button').onclick = function() { front = !front; };
+    qrcode.callback = function(ss){
+      alert(ss);
+    };
+    var constraints = {
+      "video": {
+        facingMode: (front? "user" : "environment")
+      },
+      "audio":false
+    };
+    $("#snap").click(function () {startPat();});
+    navigator.mediaDevices.getUserMedia(constraints).then(
+      function(stream) {
+        /* 使用这个stream stream */
+        video.srcObject = stream;
+        video.onloadedmetadata = function(e) {
+          video.play();
+        };
+      }).catch(
+        function(err) {
+        /* 处理error */
+        alert(err.name + ": " + err.message);
+      });
+  }catch(e){
+      alert(e);
+  }
+});
+
+
+
+
+function startPat(){
+    setTimeout(function(){
+        if(context)
+        {
+            context.drawImage(video, 0, 0, 320, 320);
+            CatchCode();
+        }
+    },200);
+}
+
+function CatchCode() {
+    if(canvas!=null)
+    {
+        var image = canvas.toDataURL();
+        qrcode.decode(image);
+    }
+}
+</script>
+  <body>
+
+<div id="support"></div>
+<div id="contentHolder">
+  <div style="height:320px;width:320px;position: relative;margin:auto;border:2px #000 solid">
+    <video id="video" width=320" height="320" autoplay></video>
+    <div style="border:2px #fff solid;width:200px;height: 200px;position:absolute;top:58px;left:58px;z-index: 500; "></div>
+    <div id="flip-button" style="width:auto;padding:2px 12px;text-align:center;position:absolute;bottom:45px;right:2px;cursor:pointer;background:rgba(255,255,255,0.8)">切换</div>
+  </div>
+
+
+<canvas style="display:none; background-color:#F00;" id="canvas" width="320" height="320">
+</canvas> <br/>
+<button id="snap" style="height:50px; width:120px;">开始扫描</button>
+   </div>
+
+
+
+</body></html>
