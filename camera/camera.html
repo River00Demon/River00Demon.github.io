@@ -48,33 +48,33 @@
       qrcode.callback = function(ss){
         alert(ss);
       };
-      var constraints = {
-        "video": {
-          facingMode: (front? "user" : "environment")
-        },
-        "audio":false
-      };
-      $("#snap").click(function () {startPat();});
-      navigator.mediaDevices.getUserMedia(constraints).then(
-        function(stream) {
-          /* 使用这个stream stream */
-          video.srcObject = stream;
-          //video.onloadedmetadata = function(e) {
-          //  video.play();
-          //};
-        }).catch(
-          function(err) {
-          /* 处理error */
-          alert(err.name + ": " + err.message);
-        });
+        var constraints = {
+            "video": {
+                facingMode: (front? "user" : "environment")
+            },
+            "audio":false
+        };
+      $("#snap").click(function () {getCamera(constraints);startPat();});
+
     }catch(e){
         alert(e);
     }
   });
+  function getCamera(constraints) {
 
-
-
-
+      navigator.mediaDevices.getUserMedia(constraints).then(
+          function(stream) {
+              /* 使用这个stream stream */
+              video.srcObject = stream;
+              video.onloadedmetadata = function(e) {
+                  video.play();
+              };
+          }).catch(
+          function(err) {
+              /* 处理error */
+              alert(err.name + ": " + err.message);
+          });
+  }
   function startPat(){
       setTimeout(function(){
           if(context)
