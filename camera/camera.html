@@ -40,19 +40,16 @@ $(function(){
       alert(ss);
     };
     var constraints = {
-      "video": true,
+      "video": {
+        facingMode: (front? "user" : "environment")
+      },
       "audio":false
     };
     $("#snap").click(function () {startPat();});
     navigator.mediaDevices.getUserMedia(constraints).then(
       function(stream) {
         /* 使用这个stream stream */
-        if ("srcObject" in video) {
-          video.srcObject = stream;
-        } else {
-          // 防止再新的浏览器里使用它，应为它已经不再支持了
-          video.src = window.URL.createObjectURL(stream);
-        }
+        video.srcObject = stream;
         video.onloadedmetadata = function(e) {
           video.play();
         };
