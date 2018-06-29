@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html><head>
+    <title>HTML5 code Reader</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=gb2312">
+</head>
+<style type="text/css">
+ html, body { height: 100%; width: 100%; text-align:center; }
+</style>
+<script src="js/jquery.min.js"></script>
+<script type="text/javascript" src="jsqrcode/grid.js"></script>
+<script type="text/javascript" src="jsqrcode/version.js"></script>
+<script type="text/javascript" src="jsqrcode/detector.js"></script>
+<script type="text/javascript" src="jsqrcode/formatinf.js"></script>
+<script type="text/javascript" src="jsqrcode/errorlevel.js"></script>
+<script type="text/javascript" src="jsqrcode/bitmat.js"></script>
+<script type="text/javascript" src="jsqrcode/datablock.js"></script>
+<script type="text/javascript" src="jsqrcode/bmparser.js"></script>
+<script type="text/javascript" src="jsqrcode/datamask.js"></script>
+<script type="text/javascript" src="jsqrcode/rsdecoder.js"></script>
+<script type="text/javascript" src="jsqrcode/gf256poly.js"></script>
+<script type="text/javascript" src="jsqrcode/gf256.js"></script>
+<script type="text/javascript" src="jsqrcode/decoder.js"></script>
+<script type="text/javascript" src="jsqrcode/qrcode.js"></script>
+<script type="text/javascript" src="jsqrcode/findpat.js"></script>
+<script type="text/javascript" src="jsqrcode/alignpat.js"></script>
+<script type="text/javascript" src="jsqrcode/databr.js"></script>
+<script>
+//这段代 主要是获取摄像头的视频流并显示在Video 签中
+var canvas=null,context=null,video=null;
+var front = false;
+window.addEventListener("DOMContentLoaded", function ()
+{
+    try{
+        canvas = document.getElementById("qr-canvas");
+        context = canvas.getContext("2d");
+        video = document.getElementById("video");
+        qrcode.callback = function(ss){
+          alert(ss);
+        };
+        document.getElementById('flip-button').onclick = function() { front = !front; };
+        var videoObj = { "video": {
+          facingMode: (front? "user" : "environment")
+        },audio:false},
+        flag=true,
+        MediaErr = function (error)
+        {
+            flag=false;
+            if (error.PERMISSION_DENIED)
+            {
+                 alert('用户拒绝了浏览器请求媒体的权限', '提示');
+            } else if (error.NOT_SUPPORTED_ERROR) {
+                 alert('对不起，您的浏览器不支持拍照功能，请使用其他浏览器', '提示');
+            } else if (error.MANDATORY_UNSATISFIED_ERROR) {
+                 alert('指定的媒体类型未接收到媒体流', '提示');
+            } else {
+                 alert('系统未能获取到摄像头，请确保摄像头已正确安装。或尝试刷新页面，重试', '提示');
+            }
+        };
+        //获取媒体的兼容代码，目前只支持（Firefox,Chrome,Opera）
+        if (navigator.getUserMedia)
+        {
+            //qq浏览器不支持
+            if (navigator.userAgent.indexOf('MQQBrowser') > -1) {
+                 alert('对不起，您的浏览器不支持拍照功能，请使用其他浏览器', '提示');
+                 return false;
+            }
+            navigator.getUserMedia(videoObj, function (stream) {
+                if (video.mozSrcObject !== undefined)video.mozSrcObject = stream;
+                else video.src = ((window.URL || window.webkitURL || window.mozURL || window.msURL) && window.URL.createObjectURL(stream)) || stream;
+                video.play();
+            }, MediaErr);
+
+        }
+        else if(navigator.webkitGetUserMedia)
+        {
+           navigator.webkitGetUserMedia(videoObj, function (stream)
+           {
+             video.src = window.webkitURL.createObjectURL(stream);
+             video.play();
+            }, MediaErr);
+        }
+        else if (navigator.mozGetUserMedia)
+        {
+            navigator.mozGetUserMedia(videoObj, function (stream) {
+                 video.src = window.URL.createObjectURL(stream);
+                 video.play();
+            }, MediaErr);
+        }
+        else if (navigator.msGetUserMedia)
+        {
+             navigator.msGetUserMedia(videoObj, function (stream) {
+                $(document).scrollTop($(window).height());
+                video.src = window.URL.createObjectURL(stream);
+                video.play();
+             }, MediaErr);
+        }else{
+            alert('对不起，您的浏览器不支持拍照功能，请使用其他浏览器');
+            return false;
+        }
+        if(flag){
+            alert('为了获得更准确的测试结果，请尽量将二维码置于框中，然后进行拍摄、扫描。 请确保浏览器有权限使用摄像功能');
+        }
+         //这个是拍照按钮的事件，
+        $("#snap").click(function () {startPat();}).show();
+    }catch(e){
+        printHtml("浏览器不支持HTML5 CANVAS");
+    }
+}, false);
+
+//打印内容到页面
+function printHtml(content){
+    $(window.document.body).append(content+"<br/>");
+}
+//开始拍照
+function startPat(){
+    setTimeout(function(){//防止调用过快
+        if(context)
+        {
+            context.drawImage(video, 0, 0, 320, 320);
+            CatchCode();
+        }
+    },200);
+}
+//抓屏获取图像流，并上传到服务器
+function CatchCode() {
+    if(canvas!=null)
+    {
+        //以下开始编 数据
+        //var imgData = canvas.toDataURL();
+        //将图像转换为base64数据
+        //var base64Data = imgData;//.substr(22); //在前端截取22位之后的字符串作为图像数据
+        //开始异步上
+        var image = canvas.toDataURL("image/png").replace("data:image/png;base64,", "");
+        qrcode.decode();
+
+
+      //   $.ajax({
+			// url : 'qRCodeAction_decoderQRCode.action',
+			// async : false,
+			// type : 'post',
+			// data : {
+			// 	'time' : (new Date()).toString(),
+			// 	'img' : image
+			// },
+			// success : function(result) {
+			// 	  alert("二维码内容："+result);
+			// },
+	    // });
+    }
+}
+</script>
+  <body>
+
+<div id="support"></div>
+<div id="contentHolder">
+  <div style="height:320px;width:320px;position: relative;margin:auto;">
+    <video id="video" width=320" height="320" autoplay></video>
+    <div style="border:2px #fff solid;width:200px;height: 200px;position:absolute;top:58px;left:58px;z-index: 500; "></div>
+    <div id="flip-button" style="width:auto;padding:2px 12px;text-align:center;position:absolute;bottom:45px;right:2px;cursor:pointer;background:rgba(255,255,255,0.8)">切换</div>
+  </div>
+
+
+<canvas style="display:none; background-color:#F00;" id="qr-canvas" width="320" height="320">
+</canvas> <br/>
+<button id="snap" style="display:none; height:50px; width:120px;">开始扫描</button>
+   </div>
+
+
+
+</body></html>
